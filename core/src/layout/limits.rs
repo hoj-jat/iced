@@ -1,5 +1,5 @@
 #![allow(clippy::manual_clamp)]
-use crate::{Length, Size};
+use crate::{Direction, Length, Size};
 
 /// A set of size constraints for layouting.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -7,6 +7,7 @@ pub struct Limits {
     min: Size,
     max: Size,
     compression: Size<bool>,
+    direction: Direction,
 }
 
 impl Limits {
@@ -15,6 +16,7 @@ impl Limits {
         min: Size::ZERO,
         max: Size::INFINITE,
         compression: Size::new(false, false),
+        direction: Direction::LeftToRight,
     };
 
     /// Creates new [`Limits`] with the given minimum and maximum [`Size`].
@@ -29,6 +31,7 @@ impl Limits {
             min,
             max,
             compression: compress,
+            direction: Direction::LeftToRight,
         }
     }
 
@@ -45,6 +48,17 @@ impl Limits {
     /// Returns the compression of the [`Limits`].
     pub fn compression(&self) -> Size<bool> {
         self.compression
+    }
+
+    /// Returns the layout [`Direction`] of the [`Limits`].
+    pub fn direction(&self) -> Direction {
+        self.direction
+    }
+
+    /// Sets the layout [`Direction`] of the [`Limits`].
+    pub fn with_direction(mut self, direction: Direction) -> Limits {
+        self.direction = direction;
+        self
     }
 
     /// Applies a width constraint to the current [`Limits`].
@@ -131,6 +145,7 @@ impl Limits {
             min,
             max,
             compression: self.compression,
+            direction: self.direction,
         }
     }
 
@@ -140,6 +155,7 @@ impl Limits {
             min: Size::ZERO,
             max: self.max,
             compression: self.compression,
+            direction: self.direction,
         }
     }
 
