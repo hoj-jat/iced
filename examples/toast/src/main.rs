@@ -469,6 +469,7 @@ mod toast {
                 10.into(),
                 10.0,
                 Alignment::End,
+                iced::Direction::LeftToRight,
                 self.toasts,
                 self.trees,
             )

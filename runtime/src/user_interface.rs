@@ -6,7 +6,7 @@ use crate::core::overlay;
 use crate::core::renderer;
 use crate::core::widget;
 use crate::core::window;
-use crate::core::{Clipboard, Element, InputMethod, Layout, Rectangle, Shell, Size, Vector};
+use crate::core::{Clipboard, Direction, Element, InputMethod, Layout, Point, Rectangle, Shell, Size, Vector};
 
 /// A set of interactive graphical elements with a specific [`Layout`].
 ///
@@ -26,6 +26,7 @@ pub struct UserInterface<'a, Message, Theme, Renderer> {
     state: widget::Tree,
     overlay: Option<Overlay>,
     bounds: Size,
+    direction: Direction,
 }
 
 struct Overlay {
@@ -93,17 +94,26 @@ where
         bounds: Size,
         cache: Cache,
         renderer: &mut Renderer,
+        direction: Direction,
     ) -> Self {
         let mut root = root.into();
 
         let Cache { mut state } = cache;
         state.diff(root.as_widget());
 
-        let base = root.as_widget_mut().layout(
+        let mut base = root.as_widget_mut().layout(
             &mut state,
             renderer,
-            &layout::Limits::new(Size::ZERO, bounds),
+            &layout::Limits::new(Size::ZERO, bounds)
+                .with_direction(direction),
         );
+
+        if matches!(direction, Direction::RightToLeft) {
+            base.move_to_mut(Point::new(
+                bounds.width - base.size().width,
+                0.0,
+            ));
+        }
 
         UserInterface {
             root,
@@ -111,6 +121,7 @@ where
             state,
             overlay: None,
             bounds,
+            direction,
         }
     }
 
@@ -225,8 +236,16 @@ where
                     self.base = self.root.as_widget_mut().layout(
                         &mut self.state,
                         renderer,
-                        &layout::Limits::new(Size::ZERO, self.bounds),
+                        &layout::Limits::new(Size::ZERO, self.bounds)
+                            .with_direction(self.direction),
                     );
+
+                    if matches!(self.direction, Direction::RightToLeft) {
+                        self.base.move_to_mut(Point::new(
+                            self.bounds.width - self.base.size().width,
+                            0.0,
+                        ));
+                    }
 
                     maybe_overlay = self
                         .root
@@ -328,8 +347,16 @@ where
                     self.base = self.root.as_widget_mut().layout(
                         &mut self.state,
                         renderer,
-                        &layout::Limits::new(Size::ZERO, self.bounds),
+                        &layout::Limits::new(Size::ZERO, self.bounds)
+                            .with_direction(self.direction),
                     );
+
+                    if matches!(self.direction, Direction::RightToLeft) {
+                        self.base.move_to_mut(Point::new(
+                            self.bounds.width - self.base.size().width,
+                            0.0,
+                        ));
+                    }
 
                     if let Some(mut overlay) = self
                         .root
@@ -557,7 +584,7 @@ where
     /// Relayouts and returns a new  [`UserInterface`] using the provided
     /// bounds.
     pub fn relayout(self, bounds: Size, renderer: &mut Renderer) -> Self {
-        Self::build(self.root, bounds, Cache { state: self.state }, renderer)
+        Self::build(self.root, bounds, Cache { state: self.state }, renderer, self.direction)
     }
 
     /// Extract the [`Cache`] of the [`UserInterface`], consuming it in the

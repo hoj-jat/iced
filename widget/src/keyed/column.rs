@@ -255,6 +255,7 @@ where
             self.padding,
             self.spacing,
             self.align_items,
+            limits.direction(),
             &mut self.children,
             &mut tree.children,
         )

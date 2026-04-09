@@ -220,6 +220,7 @@ where
             self.padding,
             self.spacing,
             self.align,
+            limits.direction(),
             &mut self.children,
             &mut tree.children,
         )
